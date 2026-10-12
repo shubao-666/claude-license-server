@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>卡密管理后台</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: #0d1220;
+      color: #e0e6f0;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 { color: #22d3ee; }
+    .login-box {
+      max-width: 400px;
+      margin: 100px auto;
+      background: #141b2d;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #2a3a5c;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      background: #0d1220;
+      border: 1px solid #2a3a5c;
+      border-radius: 6px;
+      color: #fff;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #141b2d;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #2a3a5c;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 28px;
+      font-weight: bold;
+      color: #22d3ee;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #141b2d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #2a3a5c;
+      font-size: 13px;
+    }
+    th {
+      background: #1a2540;
+      color: #6b8bb5;
+    }
+    .unbind-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      background: #ef4444;
+    }
+    .hidden { display: none; }
+    .generate-row {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      align-items: center;
+    }
+    .generate-row select, .generate-row input {
+      width: auto;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 登录页 -->
+  <div id="login-page" class="login-box">
+    <h2 style="margin-top:0; text-align:center;">🔑 管理后台登录</h2>
+    <input type="password" id="password" placeholder="请输入管理员密码">
+    <button onclick="login()" style="width:100%;">登录</button>
+  </div>
+
+  <!-- 主页面 -->
+  <div id="main-page" class="hidden">
+    <h1>🛡️ 卡密管理后台</h1>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div>总卡密数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active">0</div>
+        <div>已激活</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-unused">0</div>
+        <div>未使用</div>
+      </div>
+    </div>
+
+    <h3>生成新卡密</h3>
+    <div class="generate-row">
+      <select id="gen-type">
+        <option value="永久">永久授权</option>
+        <option value="30">30天</option>
+        <option value="90">90天</option>
+        <option value="365">一年</option>
+      </select>
+      <input type="text" id="gen-note" placeholder="备注（客户名）">
+      <button onclick="generateKey()">生成卡密</button>
+    </div>
+
+    <h3>卡密列表</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>卡密</th>
+          <th>类型</th>
+          <th>备注</th>
+          <th>状态</th>
+          <th>机器码</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="key-list"></tbody>
+    </table>
+
+    <h3 style="margin-top:30px;">版本更新设置</h3>
+    <div class="generate-row">
+      <input type="text" id="ver-num" placeholder="版本号，如 2.1.0">
+      <input type="text" id="ver-url" placeholder="下载链接">
+      <input type="text" id="ver-note" placeholder="更新说明">
+      <button onclick="updateVersion()">保存</button>
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('admin_token') || '';
+
+    async function api(path, method = 'GET', body = {}) {
+      const res = await fetch(path, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: method === 'GET' ? undefined : JSON.stringify(body)
+      });
+      return res.json();
+    }
+
+    function login() {
+      const pwd = document.getElementById('password').value;
+      token = pwd;
+      localStorage.setItem('admin_token', token);
+      loadList();
+    }
+
+    async function loadList() {
+      const data = await api('/api/admin/list');
+      if (!data.success) {
+        document.getElementById('login-page').classList.remove('hidden');
+        document.getElementById('main-page').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('main-page').classList.remove('hidden');
+
+      const keys = data.keys;
+      const keysArr = Object.entries(keys);
+      const activated = keysArr.filter(([k, v]) => v.machineId).length;
+      
+      document.getElementById('stat-total').textContent = keysArr.length;
+      document.getElementById('stat-active').textContent = activated;
+      document.getElementById('stat-unused').textContent = keysArr.length - activated;
+
+      const listEl = document.getElementById('key-list');
+      listEl.innerHTML = '';
+      keysArr.forEach(([key, info]) => {
+        const tr = document.createElement('tr');
+        const status = info.machineId ? '✅ 已激活' : '⏳ 未使用';
+        const expireText = info.expire ? new Date(info.expire).toLocaleDateString() : '永久';
+        tr.innerHTML = `
+          <td style="font-family:monospace;">${key}</td>
+          <td>${info.type}天</td>
+          <td>${info.note || '-'}</td>
+          <td>${status}</td>
+          <td style="font-size:11px;">${info.machineId || '-'}</td>
+          <td>
+            ${info.machineId ? `<button class="unbind-btn" onclick="unbind('${key}')">解绑</button>` : ''}
+          </td>
+        `;
+        listEl.appendChild(tr);
+      });
+    }
+
+    async function generateKey() {
+      const type = document.getElementById('gen-type').value;
+      const note = document.getElementById('gen-note').value;
+      const data = await api('/api/admin/generate', 'POST', { type, note });
+      if (data.success) {
+        alert('生成成功！\n\n卡密: ' + data.key);
+        loadList();
+      }
+    }
+
+    async function unbind(key) {
+      if (confirm('确定要解绑这个卡密吗？')) {
+        await api('/api/admin/unbind', 'POST', { key });
+        loadList();
+      }
+    }
+
+    async function updateVersion() {
+      const latest = document.getElementById('ver-num').value;
+      const url = document.getElementById('ver-url').value;
+      const note = document.getElementById('ver-note').value;
+      await api('/api/admin/version', 'POST', { latest, url, note });
+      alert('版本信息已更新');
+    }
+
+    // 自动加载
+    if (token) loadList();
+  </script>
+</body>
+</html>
