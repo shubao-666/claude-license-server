@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const ADMIN_PASSWORD = 'admin123';
+const ADMIN_PASSWORD = '497497QQ';
 
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify({
