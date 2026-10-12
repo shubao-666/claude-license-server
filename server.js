@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const ADMIN_PASSWORD = '497497QQ';
+const ADMIN_PASSWORD = 'admin123';
 
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify({
@@ -66,15 +66,34 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ success: false, reason: '卡密已过期' }));
         return;
       }
-      if (keyData.machineId && keyData.machineId !== machineId) {
-        res.end(JSON.stringify({ success: false, reason: '卡密已绑定其他电脑' }));
-        return;
+
+      // 不同卡密类型允许绑定的设备数
+      const deviceLimit = {
+        '1h': 1,      // 1小时测试卡：1台
+        '7': 1,       // 7天卡：1台
+        '30': 2,      // 30天月卡：2台
+        '90': 3,      // 90天季卡：3台
+        '365': 6,     // 365天年卡：6台
+        '永久': 10    // 永久卡：10台
+      };
+      const maxDevices = deviceLimit[keyData.type] || 1;
+
+      // 兼容旧数据：如果是旧的单机器码格式，转成数组
+      if (!keyData.machineList) {
+        keyData.machineList = keyData.machineId ? [keyData.machineId] : [];
       }
-      if (!keyData.machineId) {
-        keyData.machineId = machineId;
-        keyData.activateTime = new Date().toISOString();
+
+      // 检查这台机器是否已经绑定过
+      if (!keyData.machineList.includes(machineId)) {
+        if (keyData.machineList.length >= maxDevices) {
+          res.end(JSON.stringify({ success: false, reason: `已达绑定设备上限（${maxDevices}台），如需加设备请联系客服` }));
+          return;
+        }
+        keyData.machineList.push(machineId);
+        if (!keyData.activateTime) keyData.activateTime = new Date().toISOString();
         writeData(data);
       }
+
       res.end(JSON.stringify({
         success: true,
         expire: keyData.expire,
@@ -118,7 +137,7 @@ const server = http.createServer((req, res) => {
         type,
         expire,
         note,
-        machineId: null,
+        machineList: [],
         createTime: new Date().toISOString()
       };
       writeData(data);
@@ -148,6 +167,7 @@ const server = http.createServer((req, res) => {
       const { key } = JSON.parse(body || '{}');
       const data = readData();
       if (data.keys[key]) {
+        data.keys[key].machineList = [];
         data.keys[key].machineId = null;
         writeData(data);
         res.end(JSON.stringify({ success: true }));
@@ -175,8 +195,7 @@ const server = http.createServer((req, res) => {
   }
 
   else {
-    let filePath = path.join(__dirname, pathname === '/' ? 'admin.html' : pathname);
-
+    let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
     fs.readFile(filePath, (err, data) => {
       if (err) {
         res.statusCode = 404;
