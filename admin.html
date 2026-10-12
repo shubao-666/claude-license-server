@@ -94,14 +94,12 @@
   </style>
 </head>
 <body>
-  <!-- 登录页 -->
   <div id="login-page" class="login-box">
     <h2 style="margin-top:0; text-align:center;">🔑 管理后台登录</h2>
     <input type="password" id="password" placeholder="请输入管理员密码">
     <button onclick="login()" style="width:100%;">登录</button>
   </div>
 
-  <!-- 主页面 -->
   <div id="main-page" class="hidden">
     <h1>🛡️ 卡密管理后台</h1>
 
@@ -123,10 +121,11 @@
     <h3>生成新卡密</h3>
     <div class="generate-row">
       <select id="gen-type">
-        <option value="永久">永久授权</option>
+        <option value="1h">⏱️ 1小时测试卡</option>
         <option value="30">30天</option>
         <option value="90">90天</option>
         <option value="365">一年</option>
+        <option value="永久">永久授权</option>
       </select>
       <input type="text" id="gen-note" placeholder="备注（客户名）">
       <button onclick="generateKey()">生成卡密</button>
@@ -202,10 +201,12 @@
       keysArr.forEach(([key, info]) => {
         const tr = document.createElement('tr');
         const status = info.machineId ? '✅ 已激活' : '⏳ 未使用';
-        const expireText = info.expire ? new Date(info.expire).toLocaleDateString() : '永久';
+        let typeText = info.type;
+        if (info.type === '1h') typeText = '⏱️ 1小时测试';
+        else if (info.type !== '永久') typeText = info.type + '天';
         tr.innerHTML = `
           <td style="font-family:monospace;">${key}</td>
-          <td>${info.type}天</td>
+          <td>${typeText}</td>
           <td>${info.note || '-'}</td>
           <td>${status}</td>
           <td style="font-size:11px;">${info.machineId || '-'}</td>
@@ -242,7 +243,6 @@
       alert('版本信息已更新');
     }
 
-    // 自动加载
     if (token) loadList();
   </script>
 </body>
