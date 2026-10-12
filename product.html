@@ -38,7 +38,7 @@
       padding:18px 60px; background: linear-gradient(90deg,#06b6d4,#8b5cf6);
       color:white; border:none; border-radius:50px; font-size:18px; font-weight:bold;
       cursor:pointer; box-shadow:0 10px 40px rgba(6,182,212,0.4);
-      transition: transform 0.3s;
+      transition: transform 0.3s; text-decoration:none; display:inline-block;
     }
     .cta-btn:hover { transform: translateY(-3px); }
 
@@ -84,23 +84,7 @@
     <h1>Claude 防封助手 v2.0</h1>
     <p class="subtitle">一键配置安全环境，从根源解决Claude封号问题。再也不用折腾时区、代理、DNS，打开软件点一下就好。</p>
     <div class="price-tag">不再因为环境而封号</div>
-    <button class="cta-btn" onclick="
-var w=window.open('','','width=400,height=600');
-w.document.write('<img src=https://aka.doubaocdn.com/s/gUf0Dc1iVp style=width:350px>');
-w.document.write('<p style=font-size:20px;text-align:center>微信号：Laicai9522</p>');
-">立即购买 →</button>
-
-  </div>
-
-  <!-- 微信弹窗 -->
-  <div id="wx-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center;">
-    <div style="background:#141b2d; padding:30px; border-radius:16px; text-align:center; max-width:350px; border:1px solid #2a3a5c;">
-      <h3 style="margin-bottom:15px; color:#22d3ee;">📱 扫码加微信购买</h3>
-      <img src="https://aka.doubaocdn.com/s/gUf0Dc1iVp" style="width:220px; border-radius:8px; margin-bottom:15px;">
-      <p style="color:#94a3b8; margin-bottom:10px;">微信号：<span style="color:#fbbf24; font-weight:bold; font-size:18px;">Laicai9522</span></p>
-      <p style="color:#6b8bb5; font-size:13px; margin-bottom:20px;">加好友请备注：Claude防封</p>
-      <button onclick="document.getElementById('wx-modal').style.display='none'" style="padding:10px 30px; background:linear-gradient(90deg,#06b6d4,#8b5cf6); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">关闭</button>
-    </div>
+    <a href="https://aka.doubaocdn.com/s/gUf0Dc1iVp" target="_blank" class="cta-btn">立即购买 →</a>
   </div>
 
   <div class="section">
