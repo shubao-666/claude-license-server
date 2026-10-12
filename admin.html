@@ -121,11 +121,11 @@
     <h3>生成新卡密</h3>
     <div class="generate-row">
       <select id="gen-type">
-        <option value="1h">⏱️ 1小时测试卡</option>
-        <option value="30">30天</option>
-        <option value="90">90天</option>
-        <option value="365">一年</option>
-        <option value="永久">永久授权</option>
+        <option value="1h">⏱️ 1小时测试卡（1台）</option>
+        <option value="30">30天月卡（2台）</option>
+        <option value="90">90天季卡（3台）</option>
+        <option value="365">一年卡（6台）</option>
+        <option value="永久">永久授权（10台）</option>
       </select>
       <input type="text" id="gen-note" placeholder="备注（客户名）">
       <button onclick="generateKey()">生成卡密</button>
@@ -139,7 +139,7 @@
           <th>类型</th>
           <th>备注</th>
           <th>状态</th>
-          <th>机器码</th>
+          <th>绑定设备</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -190,7 +190,7 @@
 
       const keys = data.keys;
       const keysArr = Object.entries(keys);
-      const activated = keysArr.filter(([k, v]) => v.machineId).length;
+      const activated = keysArr.filter(([k, v]) => (v.machineList || (v.machineId ? [v.machineId] : [])).length > 0).length;
       
       document.getElementById('stat-total').textContent = keysArr.length;
       document.getElementById('stat-active').textContent = activated;
@@ -200,7 +200,8 @@
       listEl.innerHTML = '';
       keysArr.forEach(([key, info]) => {
         const tr = document.createElement('tr');
-        const status = info.machineId ? '✅ 已激活' : '⏳ 未使用';
+        const machineList = info.machineList || (info.machineId ? [info.machineId] : []);
+        const status = machineList.length > 0 ? `✅ 已激活（${machineList.length}台）` : '⏳ 未使用';
         let typeText = info.type;
         if (info.type === '1h') typeText = '⏱️ 1小时测试';
         else if (info.type !== '永久') typeText = info.type + '天';
@@ -209,9 +210,9 @@
           <td>${typeText}</td>
           <td>${info.note || '-'}</td>
           <td>${status}</td>
-          <td style="font-size:11px;">${info.machineId || '-'}</td>
+          <td style="font-size:11px;">${machineList.length > 0 ? machineList.length + '台设备' : '-'}</td>
           <td>
-            ${info.machineId ? `<button class="unbind-btn" onclick="unbind('${key}')">解绑</button>` : ''}
+            ${machineList.length > 0 ? `<button class="unbind-btn" onclick="unbind('${key}')">全部解绑</button>` : ''}
           </td>
         `;
         listEl.appendChild(tr);
@@ -229,7 +230,7 @@
     }
 
     async function unbind(key) {
-      if (confirm('确定要解绑这个卡密吗？')) {
+      if (confirm('确定要解绑这张卡密的所有设备吗？')) {
         await api('/api/admin/unbind', 'POST', { key });
         loadList();
       }
