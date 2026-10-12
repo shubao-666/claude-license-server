@@ -175,7 +175,8 @@ const server = http.createServer((req, res) => {
   }
 
   else {
-    let filePath = path.join(__dirname, 'public', pathname === '/' ? 'admin.html' : pathname);
+    let filePath = path.join(__dirname, pathname === '/' ? 'admin.html' : pathname);
+
     fs.readFile(filePath, (err, data) => {
       if (err) {
         res.statusCode = 404;
