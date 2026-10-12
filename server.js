@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
@@ -56,29 +57,24 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       const { key, machineId } = JSON.parse(body || '{}');
       const data = readData();
-      
       const keyData = data.keys[key];
       if (!keyData) {
         res.end(JSON.stringify({ success: false, reason: '卡密不存在' }));
         return;
       }
-
       if (keyData.expire && Date.now() > keyData.expire) {
         res.end(JSON.stringify({ success: false, reason: '卡密已过期' }));
         return;
       }
-
       if (keyData.machineId && keyData.machineId !== machineId) {
         res.end(JSON.stringify({ success: false, reason: '卡密已绑定其他电脑' }));
         return;
       }
-
       if (!keyData.machineId) {
         keyData.machineId = machineId;
         keyData.activateTime = new Date().toISOString();
         writeData(data);
       }
-
       res.end(JSON.stringify({
         success: true,
         expire: keyData.expire,
@@ -103,20 +99,21 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ success: false, reason: '未授权' }));
       return;
     }
-
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const { type = '永久', note = '' } = JSON.parse(body || '{}');
       const data = readData();
-      
       const key = generateKey();
       let expire = null;
       if (type !== '永久') {
-        const days = parseInt(type);
-        expire = Date.now() + days * 24 * 60 * 60 * 1000;
+        if (type === '1h') {
+          expire = Date.now() + 1 * 60 * 60 * 1000;
+        } else {
+          const days = parseInt(type);
+          expire = Date.now() + days * 24 * 60 * 60 * 1000;
+        }
       }
-
       data.keys[key] = {
         type,
         expire,
@@ -125,7 +122,6 @@ const server = http.createServer((req, res) => {
         createTime: new Date().toISOString()
       };
       writeData(data);
-
       res.end(JSON.stringify({ success: true, key, data: data.keys[key] }));
     });
   }
@@ -179,8 +175,7 @@ const server = http.createServer((req, res) => {
   }
 
   else {
-    // 静态文件，从根目录读
-    let filePath = path.join(__dirname, pathname === '/' ? 'admin.html' : pathname);
+    let filePath = path.join(__dirname, 'public', pathname === '/' ? 'admin.html' : pathname);
     fs.readFile(filePath, (err, data) => {
       if (err) {
         res.statusCode = 404;
