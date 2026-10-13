@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+data.json
+data.previous.json
+backups/
+*.secret.json
+*.tmp
+.license-store-initialized

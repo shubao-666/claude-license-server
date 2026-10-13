@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude 防封助手 v2.0 - 永久解决封号烦恼</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Microsoft YaHei", sans-serif; }
+    body { background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%); color:#e0e6f0; line-height:1.6; }
+    
+    .hero {
+      min-height: 100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:40px 20px;
+      position:relative; overflow:hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; top:0; left:0; right:0; bottom:0;
+      background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.15) 0%, transparent 60%);
+    }
+    .shield-icon {
+      width:100px; height:100px; background: linear-gradient(135deg,#06b6d4,#8b5cf6);
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:50px; margin-bottom:30px; box-shadow:0 0 60px rgba(34,211,238,0.4);
+    }
+    .hero h1 {
+      font-size:48px; font-weight:bold; margin-bottom:20px;
+      background: linear-gradient(90deg,#22d3ee,#8b5cf6);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .hero .subtitle { font-size:20px; color:#94a3b8; margin-bottom:40px; max-width:600px; }
+    .price-tag {
+      background: rgba(239,68,68,0.1); border:1px solid #ef4444;
+      padding:15px 40px; border-radius:50px; font-size:24px; color:#ef4444;
+      font-weight:bold; margin-bottom:30px;
+    }
+    .cta-btn {
+      padding:18px 60px; background: linear-gradient(90deg,#06b6d4,#8b5cf6);
+      color:white; border:none; border-radius:50px; font-size:18px; font-weight:bold;
+      cursor:pointer; box-shadow:0 10px 40px rgba(6,182,212,0.4);
+      transition: transform 0.3s;
+    }
+    .cta-btn:hover { transform: translateY(-3px); }
+
+    .section { max-width:1200px; margin:0 auto; padding:80px 20px; }
+    .section-title { text-align:center; font-size:36px; margin-bottom:60px; color:#22d3ee; }
+    
+    .features-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:25px;
+    }
+    .feature-card {
+      background: rgba(26,37,64,0.7); border:1px solid #2a3a5c; border-radius:16px;
+      padding:30px; transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color:#22d3ee; transform: translateY(-5px);
+      box-shadow:0 10px 40px rgba(34,211,238,0.15);
+    }
+    .feature-icon { font-size:40px; margin-bottom:15px; }
+    .feature-card h3 { font-size:20px; margin-bottom:10px; color:#e0e6f0; }
+    .feature-card p { color:#94a3b8; font-size:14px; }
+
+    .compare-box {
+      background: rgba(26,37,64,0.7); border-radius:16px; padding:40px;
+      border:1px solid #2a3a5c;
+    }
+    .compare-row {
+      display:flex; justify-content:space-between; padding:15px 0;
+      border-bottom:1px solid #2a3a5c;
+    }
+    .compare-row:last-child { border-bottom:none; }
+    .before { color:#f87171; }
+    .after { color:#34d399; font-weight:bold; }
+
+    .footer {
+      text-align:center; padding:40px; color:#4a5a75; font-size:13px;
+      border-top:1px solid #2a3a5c; margin-top:60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="shield-icon">🛡️</div>
+    <h1>Claude 防封助手 v2.0</h1>
+    <p class="subtitle">一键配置安全环境，从根源解决Claude封号问题。再也不用折腾时区、代理、DNS，打开软件点一下就好。</p>
+    <div class="price-tag">不再因为环境而封号</div>
+    <button class="cta-btn" onclick="alert('扫码加微信购买\n微信号：Laicai9522\n二维码地址：https://claude-license-server.onrender.com/wx_qr.jpg')">立即购买 →</button>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">✨ 核心功能</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>自动环境检测</h3>
+        <p>一键扫描时区、DNS、WebRTC泄露、IP风险、系统代理，所有风险点一眼看穿。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>一键防封加固</h3>
+        <p>不用手动改系统设置，点一下自动配置最安全的Claude使用环境。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3>海外地址生成器</h3>
+        <p>支持美/英/港/日/新五国随机身份，注册账号直接复制，地址和IP地区完美匹配。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>代理格式转换</h3>
+        <p>买的代理粘贴进去，一键转成Socks5/HTTP/HTTPS格式，直接粘到代理软件用。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>常用提示词库</h3>
+        <p>内置20+常用提示词，写代码、写文案、翻译、总结一键复制，不用自己打。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>浏览器UA切换</h3>
+        <p>一键伪装成美国原生浏览器，降低指纹检测风险。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏰</div>
+        <h3>额度倒计时</h3>
+        <p>实时显示距离下次额度重置还有多久，避免突然用不了。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧹</div>
+        <h3>一键清理缓存</h3>
+        <p>清理Claude Code、桌面版、网页版缓存，解决各种奇怪问题。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>一卡一机绑定</h3>
+        <p>授权码绑定你的电脑，换电脑找客服解绑，安全不盗版。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">🛡️ 四大核心防封模块</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div class="feature-card" style="border-top:3px solid #06b6d4;">
+        <div style="font-size:36px; margin-bottom:15px;">🔍</div>
+        <h3 style="margin-bottom:12px;">智能环境检测</h3>
+        <p style="line-height:1.8;">
+          ✅ 实时检测时区是否匹配目标地区<br>
+          ✅ 检测DNS泄露、WebRTC泄露风险<br>
+          ✅ 自动识别IP是机房/住宅类型，标记风险等级<br>
+          ✅ 一键生成环境风险评分，哪里有问题一眼看到
+        </p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid #10b981;">
+        <div style="font-size:36px; margin-bottom:15px;">⚡</div>
+        <h3 style="margin-bottom:12px;">一键防封操作</h3>
+        <p style="line-height:1.8;">
+          ✅ 一键自动切换时区、语言、浏览器策略<br>
+          ✅ 一键全量清理Claude缓存、Cookie、配置<br>
+          ✅ 一键洗白大师：从清缓存到启动Claude全自动<br>
+          ✅ 一键恢复国内环境，出错随时回滚
+        </p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid #8b5cf6;">
+        <div style="font-size:36px; margin-bottom:15px;">🌐</div>
+        <h3 style="margin-bottom:12px;">浏览器UA伪装</h3>
+        <p style="line-height:1.8;">
+          ✅ 一键把Chrome/Edge伪装成美国原生浏览器<br>
+          ✅ 隐藏真实浏览器指纹，降低被Claude风控标记概率<br>
+          ✅ 一键恢复默认UA，操作简单<br>
+          ✅ 重启浏览器就生效，不用复杂配置
+        </p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid #f59e0b;">
+        <div style="font-size:36px; margin-bottom:15px;">📚</div>
+        <h3 style="margin-bottom:12px;">防封知识库</h3>
+        <p style="line-height:1.8;">
+          ✅ 整理了所有常见Claude封号原因和避坑指南<br>
+          ✅ 告诉你哪些行为会触发风控，哪些操作是安全的<br>
+          ✅ 从注册到使用全流程防封技巧<br>
+          ✅ 持续更新最新风控规则
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">对比一下就知道</h2>
+    <div class="compare-box">
+      <div class="compare-row">
+        <span class="before">❌ 手动折腾一下午改时区、改代理、清DNS</span>
+        <span class="after">✅ 点一下全搞定，10秒</span>
+      </div>
+      <div class="compare-row">
+        <span class="before">❌ 因为环境不对莫名其妙被封号</span>
+        <span class="after">✅ 从根源规避所有封号风险点</span>
+      </div>
+      <div class="compare-row">
+        <span class="before">❌ 每次换代理都要手动算格式</span>
+        <span class="after">✅ 粘贴进去一键转好</span>
+      </div>
+      <div class="compare-row">
+        <span class="before">❌ 注册账号要自己找美国地址</span>
+        <span class="after">✅ 一键生成随机身份直接用</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    © Claude 防封助手 · 永久更新 · 售后无忧
+  </div>
+</body>
+</html>

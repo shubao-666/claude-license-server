@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude防封助手 - 官方发卡中心</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Microsoft YaHei",sans-serif; }
+    body { background: linear-gradient(135deg,#0d1220,#1a2540); color:#e0e6f0; min-height:100vh; }
+    .container { max-width:900px; margin:0 auto; padding:40px 20px; }
+    .hero { text-align:center; margin-bottom:50px; }
+    .hero h1 { font-size:36px; margin-bottom:15px; background:linear-gradient(90deg,#22d3ee,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero p { color:#94a3b8; font-size:16px; }
+    .price-tag { display:inline-block; margin-top:15px; padding:8px 20px; background:#06b6d420; color:#22d3ee; border-radius:20px; font-weight:bold; }
+    .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:25px; margin:40px 0; }
+    .plan-card { background:rgba(26,37,64,0.8); border:1px solid #2a3a5c; border-radius:16px; padding:35px 25px; text-align:center; transition:all 0.3s; }
+    .plan-card:hover { transform:translateY(-5px); border-color:#22d3ee; }
+    .plan-card.featured { border:2px solid #8b5cf6; position:relative; }
+    .plan-card.featured::before { content:"🔥 最受欢迎"; position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:linear-gradient(90deg,#8b5cf6,#ec4899); padding:4px 15px; border-radius:15px; font-size:12px; font-weight:bold; }
+    .plan-icon { font-size:40px; margin-bottom:15px; }
+    .plan-name { font-size:20px; font-weight:bold; margin-bottom:10px; }
+    .plan-price { font-size:36px; font-weight:bold; color:#fbbf24; margin:15px 0; }
+    .plan-price small { font-size:14px; color:#94a3b8; }
+    .plan-desc { color:#94a3b8; font-size:13px; line-height:2; margin:20px 0; text-align:left; }
+    .buy-btn { width:100%; padding:13px; background:linear-gradient(90deg,#06b6d4,#8b5cf6); border:none; border-radius:8px; color:white; font-weight:bold; font-size:15px; cursor:pointer; }
+    .features { margin:50px 0; }
+    .features h3 { text-align:center; margin-bottom:25px; font-size:22px; }
+    .feature-list { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; }
+    .feature-item { background:rgba(26,37,64,0.6); padding:15px; border-radius:8px; border:1px solid #2a3a5c; font-size:14px; }
+    .feature-item span { color:#34d399; margin-right:8px; }
+    .footer { text-align:center; margin-top:60px; color:#4a5a75; font-size:13px; padding-top:30px; border-top:1px solid #2a3a5c; }
+    @media (max-width:768px) { .plans { grid-template-columns:1fr; } .feature-list { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>🛡️ Claude防封助手 v2.0</h1>
+      <p>一键配置安全环境，从根源解决Claude封号问题</p>
+      <div class="price-tag">不再因为环境而封号</div>
+    </div>
+
+    <div class="plans">
+      <div class="plan-card">
+        <div class="plan-icon">⏱️</div>
+        <div class="plan-name">1小时测试卡</div>
+        <div class="plan-price">¥9.9<small> / 1小时</small></div>
+        <div class="plan-desc">
+          ✅ 全部功能完整体验<br>
+          ✅ 1小时完整使用时间<br>
+          ✅ 满意再买永久版
+        </div>
+        <button class="buy-btn" onclick="alert('加微信购买：你的微信二维码/微信号')">立即购买</button>
+      </div>
+
+      <div class="plan-card featured">
+        <div class="plan-icon">♾️</div>
+        <div class="plan-name">永久授权</div>
+        <div class="plan-price">¥39.9<small> / 一次买断</small></div>
+        <div class="plan-desc">
+          ✅ 永久使用，终身免费更新<br>
+          ✅ 所有功能全部解锁<br>
+          ✅ 绑定你的电脑，安全不盗版<br>
+          ✅ 一对一售后支持
+        </div>
+        <button class="buy-btn" onclick="alert('加微信购买：你的微信二维码/微信号')">立即购买</button>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-icon">📅</div>
+        <div class="plan-name">季度卡</div>
+        <div class="plan-price">¥19.9<small> / 90天</small></div>
+        <div class="plan-desc">
+          ✅ 90天完整使用<br>
+          ✅ 所有功能全部解锁<br>
+          ✅ 到期自动提醒续费
+        </div>
+        <button class="buy-btn" onclick="alert('加微信购买：你的微信二维码/微信号')">立即购买</button>
+      </div>
+    </div>
+
+    <div class="features">
+      <h3>✨ 软件包含所有功能</h3>
+      <div class="feature-list">
+        <div class="feature-item"><span>✅</span>智能环境风险检测</div>
+        <div class="feature-item"><span>✅</span>一键防封自动加固</div>
+        <div class="feature-item"><span>✅</span>全球地址随机生成</div>
+        <div class="feature-item"><span>✅</span>代理格式自动转换</div>
+        <div class="feature-item"><span>✅</span>20+常用提示词库</div>
+        <div class="feature-item"><span>✅</span>浏览器UA一键伪装</div>
+        <div class="feature-item"><span>✅</span>额度倒计时提醒</div>
+        <div class="feature-item"><span>✅</span>一键清理缓存换号</div>
+        <div class="feature-item"><span>✅</span>防多开、机器码绑定</div>
+        <div class="feature-item"><span>✅</span>终身免费更新</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>© Claude防封助手 官方发卡中心 | 购买后自动发卡，激活即可使用</p>
+    </div>
+  </div>
+</body>
+</html>

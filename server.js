@@ -1,214 +1,75 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-
-const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
-const ADMIN_PASSWORD = '497497QQ';
-
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({
-    keys: {},
-    version: { latest: '2.0.0', url: '', note: '最新版本' }
-  }, null, 2));
-}
-
-function readData() {
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-}
-
-function writeData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-function generateKey() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
-  for (let i = 0; i < 16; i++) {
-    if (i > 0 && i % 4 === 0) result += '-';
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return result;
-}
-
-function checkAdminAuth(req) {
-  const auth = req.headers.authorization;
-  return auth === 'Bearer ' + ADMIN_PASSWORD;
-}
-
-const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(200);
-    res.end();
-    return;
-  }
-
-  const url = new URL(req.url, `http://localhost:${PORT}`);
-  const pathname = url.pathname;
-
-  if (pathname === '/api/verify' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const { key, machineId } = JSON.parse(body || '{}');
-      const data = readData();
-      const keyData = data.keys[key];
-      if (!keyData) {
-        res.end(JSON.stringify({ success: false, reason: '卡密不存在' }));
-        return;
-      }
-      if (keyData.expire && Date.now() > keyData.expire) {
-        res.end(JSON.stringify({ success: false, reason: '卡密已过期' }));
-        return;
-      }
-
-      // 不同卡密类型允许绑定的设备数
-      const deviceLimit = {
-        '1h': 1,      // 1小时测试卡：1台
-        '7': 1,       // 7天卡：1台
-        '30': 2,      // 30天月卡：2台
-        '90': 3,      // 90天季卡：3台
-        '365': 6,     // 365天年卡：6台
-        '永久': 10    // 永久卡：10台
-      };
-      const maxDevices = deviceLimit[keyData.type] || 1;
-
-      // 兼容旧数据：如果是旧的单机器码格式，转成数组
-      if (!keyData.machineList) {
-        keyData.machineList = keyData.machineId ? [keyData.machineId] : [];
-      }
-
-      // 检查这台机器是否已经绑定过
-      if (!keyData.machineList.includes(machineId)) {
-        if (keyData.machineList.length >= maxDevices) {
-          res.end(JSON.stringify({ success: false, reason: `已达绑定设备上限（${maxDevices}台），如需加设备请联系客服` }));
-          return;
-        }
-        keyData.machineList.push(machineId);
-        if (!keyData.activateTime) keyData.activateTime = new Date().toISOString();
-        writeData(data);
-      }
-
-      res.end(JSON.stringify({
-        success: true,
-        expire: keyData.expire,
-        type: keyData.type
-      }));
-    });
-  }
-
-  else if (pathname === '/api/version' && req.method === 'GET') {
-    const data = readData();
-    res.end(JSON.stringify({
-      success: true,
-      latest: data.version.latest,
-      url: data.version.url,
-      note: data.version.note
-    }));
-  }
-
-  else if (pathname === '/api/admin/generate' && req.method === 'POST') {
-    if (!checkAdminAuth(req)) {
-      res.statusCode = 401;
-      res.end(JSON.stringify({ success: false, reason: '未授权' }));
-      return;
+const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const {validate,TYPES}=require('./license-store');
+const {createPostgresStore}=require('./postgres-store');
+const {isDeepStrictEqual}=require('util');
+const limits={'1h':1,'7':1,'30':2,'90':3,'365':6,'永久':10};
+function createLicenseServer({store,password,publicDirectory=path.join(__dirname,'public')}){
+ if(!password)throw new Error('必须配置ADMIN_PASSWORD');
+ const reply=(res,value,status=200)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
+ const result=(response,status=200,commit=true)=>({response,status,commit});
+ function authorized(req){const received=Buffer.from(req.headers.authorization||''),expected=Buffer.from('Bearer '+password);return received.length===expected.length&&crypto.timingSafeEqual(received,expected);}
+ async function body(req){let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>1048576){const e=new Error('请求体过大');e.status=413;throw e;}chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{const e=new Error('JSON格式错误');e.status=400;throw e;}}
+ function key(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:16},()=>chars[crypto.randomInt(chars.length)]).join('').match(/.{4}/g).join('-');}
+ async function modify(res,fn){const outcome=await store.mutate(fn);reply(res,outcome.response,outcome.status);}
+ return http.createServer(async(req,res)=>{try{
+  const url=new URL(req.url,'http://localhost'),route=url.pathname;
+  if(route.startsWith('/api/admin/')&&!authorized(req)){reply(res,{success:false,reason:'未授权'},401);return;}
+  if(route==='/api/verify'&&req.method==='POST'){
+   const input=await body(req);
+   if(typeof input.key!=='string'||typeof input.machineId!=='string'||!input.machineId.trim()||input.machineId.length>128){reply(res,{success:false,reason:'验证参数无效'},400);return;}
+   await modify(res,data=>{
+    const card=Object.hasOwn(data.keys,input.key)?data.keys[input.key]:null;
+    if(!card)return result({success:false,reason:'卡密不存在'},200,false);
+    if(card.expire!==null&&Date.now()>=card.expire)return result({success:false,reason:'卡密已过期'},200,false);
+    const machines=card.machineList||(card.machineId?[card.machineId]:[]);
+    if(!machines.includes(input.machineId)){
+     if(machines.length>=limits[card.type])return result({success:false,reason:`已达绑定设备上限（${limits[card.type]}台），如需加设备请联系客服`},200,false);
+     card.machineList=[...machines,input.machineId];if(!card.activateTime)card.activateTime=new Date().toISOString();
     }
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const { type = '永久', note = '' } = JSON.parse(body || '{}');
-      const data = readData();
-      const key = generateKey();
-      let expire = null;
-      if (type !== '永久') {
-        if (type === '1h') {
-          expire = Date.now() + 1 * 60 * 60 * 1000;
-        } else {
-          const days = parseInt(type);
-          expire = Date.now() + days * 24 * 60 * 60 * 1000;
-        }
-      }
-      data.keys[key] = {
-        type,
-        expire,
-        note,
-        machineList: [],
-        createTime: new Date().toISOString()
-      };
-      writeData(data);
-      res.end(JSON.stringify({ success: true, key, data: data.keys[key] }));
-    });
+    return result({success:true,type:card.type,expire:card.expire});
+   });return;
   }
-
-  else if (pathname === '/api/admin/list' && req.method === 'GET') {
-    if (!checkAdminAuth(req)) {
-      res.statusCode = 401;
-      res.end(JSON.stringify({ success: false, reason: '未授权' }));
-      return;
-    }
-    const data = readData();
-    res.end(JSON.stringify({ success: true, keys: data.keys }));
+  if(route==='/api/version'&&req.method==='GET'){reply(res,{success:true,...(await store.read()).version});return;}
+  if(route==='/api/admin/list'&&req.method==='GET'){reply(res,{success:true,keys:(await store.read()).keys});return;}
+  if(route==='/api/admin/storage'&&req.method==='GET'){reply(res,{success:true,...await store.status()});return;}
+  if(route==='/api/admin/export'&&req.method==='GET'){
+   const data=await store.read();res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Content-Disposition':'attachment; filename="license-backup.json"'});res.end(JSON.stringify(data,null,2));return;
   }
-
-  else if (pathname === '/api/admin/unbind' && req.method === 'POST') {
-    if (!checkAdminAuth(req)) {
-      res.statusCode = 401;
-      res.end(JSON.stringify({ success: false, reason: '未授权' }));
-      return;
-    }
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const { key } = JSON.parse(body || '{}');
-      const data = readData();
-      if (data.keys[key]) {
-        data.keys[key].machineList = [];
-        data.keys[key].machineId = null;
-        writeData(data);
-        res.end(JSON.stringify({ success: true }));
-      } else {
-        res.end(JSON.stringify({ success: false, reason: '卡密不存在' }));
-      }
-    });
+  if(route==='/api/admin/generate'&&req.method==='POST'){
+   const input=await body(req),type=input.type||'永久';if(!TYPES.has(type)){reply(res,{success:false,reason:'不支持的卡密类型'},400);return;}
+   await modify(res,data=>{let generated;do{generated=key();}while(Object.hasOwn(data.keys,generated));
+    const expire=type==='永久'?null:Date.now()+(type==='1h'?3600000:Number(type)*86400000);
+    data.keys[generated]={type,expire,note:String(input.note||'').slice(0,1000),machineId:null,createTime:new Date().toISOString()};
+    return result({success:true,key:generated,data:data.keys[generated]});
+   });return;
   }
-
-  else if (pathname === '/api/admin/version' && req.method === 'POST') {
-    if (!checkAdminAuth(req)) {
-      res.statusCode = 401;
-      res.end(JSON.stringify({ success: false, reason: '未授权' }));
-      return;
-    }
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const { latest, url, note } = JSON.parse(body || '{}');
-      const data = readData();
-      data.version = { latest, url, note };
-      writeData(data);
-      res.end(JSON.stringify({ success: true }));
-    });
+  if(route==='/api/admin/restore'&&req.method==='POST'){
+   const incoming=await body(req);try{validate(incoming);}catch(e){reply(res,{success:false,reason:e.message},400);return;}
+   await modify(res,data=>{let added=0;for(const [id,card] of Object.entries(incoming.keys)){
+    if(Object.hasOwn(data.keys,id)&&!isDeepStrictEqual(data.keys[id],card))return result({success:false,reason:'存在冲突卡密，已停止导入，原记录保持不变'},409,false);
+    if(!Object.hasOwn(data.keys,id)){data.keys[id]=card;added++;}
+   }return result({success:true,added,total:Object.keys(data.keys).length});});return;
   }
-
-  else {
-    let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        res.statusCode = 404;
-        res.end('Not found');
-        return;
-      }
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.end(data);
-    });
+  if(route==='/api/admin/unbind'&&req.method==='POST'){
+   const input=await body(req);await modify(res,data=>{const card=Object.hasOwn(data.keys,input.key)?data.keys[input.key]:null;
+    if(!card)return result({success:false,reason:'卡密不存在'},200,false);card.machineList=[];card.machineId=null;return result({success:true});});return;
   }
-});
-
-server.listen(PORT, () => {
-  console.log(`服务器启动: http://localhost:${PORT}`);
-  console.log(`后台地址: http://localhost:${PORT}/admin.html`);
-});
+  if(route==='/api/admin/version'&&req.method==='POST'){
+   const input=await body(req);if(typeof input.latest!=='string'||!/^\d+\.\d+\.\d+$/.test(input.latest)){reply(res,{success:false,reason:'版本号格式无效'},400);return;}
+   if(input.url&&(!String(input.url).startsWith('https://'))){reply(res,{success:false,reason:'下载地址需要HTTPS'},400);return;}
+   await modify(res,data=>{data.version={latest:input.latest,url:input.url||'',note:String(input.note||'')};return result({success:true});});return;
+  }
+  if(route.startsWith('/api/')){reply(res,{success:false,reason:'接口不存在或请求方法错误'},404);return;}
+  const target=path.resolve(publicDirectory,'.'+(route==='/'?'/index.html':decodeURIComponent(route)));
+  if(!target.startsWith(publicDirectory+path.sep)){reply(res,{success:false},404);return;}
+  const data=await fs.promises.readFile(target);res.writeHead(200,{'Content-Type':target.endsWith('.html')?'text/html; charset=utf-8':'application/octet-stream'});res.end(data);
+ }catch(e){if(res.headersSent){res.destroy();return;}reply(res,{success:false,reason:e.status?e.message:'授权数据库暂时不可用，请稍后重试'},e.status||503);}});
+}
+async function start(){
+ const store=createPostgresStore({connectionString:process.env.DATABASE_URL,initialize:process.env.INITIALIZE_LICENSE_STORE==='1'});
+ try{await store.ready;const server=createLicenseServer({store,password:process.env.ADMIN_PASSWORD});server.listen(Number(process.env.PORT||3000),()=>console.log('License service ready: '+server.address().port));
+  const close=()=>server.close(()=>store.close().finally(()=>process.exit()));process.once('SIGTERM',close);process.once('SIGINT',close);
+ }catch(e){await store.close();throw e;}
+}
+if(require.main===module)start().catch(e=>{console.error('授权服务器启动失败，请检查数据库连接、初始化配置及管理员密码。错误代码：'+(e.code||'CONFIG'));process.exitCode=1;});
+module.exports={createLicenseServer,start};
